@@ -38,9 +38,17 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - run: |
-          # trigger the tests here
+      - name: Check out Repository
+        uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: 11
+          distribution: 'temurin'
+      - name: Packaging Jar
+        id: packaging-jar
+        shell: bash
+        run: cd HelloWorldFunction ; mvn clean install
 
   delete-feature:
     if: startsWith(github.event.ref, 'feature') && github.event_name == 'delete'
@@ -75,7 +83,7 @@ jobs:
     # https://github.com/actions/setup-python
     # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
     if: startsWith(github.ref, 'refs/heads/feature')
-    needs: [test]
+    needs: [ test ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -105,7 +113,7 @@ jobs:
 
   build-and-package:
     if: github.ref == 'refs/heads/main'
-    needs: [test]
+    needs: [ test ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -160,7 +168,7 @@ jobs:
 
   deploy-testing:
     if: github.ref == 'refs/heads/main'
-    needs: [build-and-package]
+    needs: [ build-and-package ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -192,7 +200,7 @@ jobs:
 
   integration-test:
     if: github.ref == 'refs/heads/main'
-    needs: [deploy-testing]
+    needs: [ deploy-testing ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -201,7 +209,7 @@ jobs:
 
   deploy-prod:
     if: github.ref == 'refs/heads/main'
-    needs: [integration-test]
+    needs: [ integration-test ]
     runs-on: ubuntu-latest
     # Configure GitHub Action Environment to have a manual approval step before deployment to production
     # https://docs.github.com/en/actions/reference/environments
